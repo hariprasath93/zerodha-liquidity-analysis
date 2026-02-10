@@ -51,12 +51,13 @@ class SocketConnection:
     """Single KiteTicker WebSocket connection."""
 
     def __init__(self, socket_id: int, api_key: str, access_token: str, tokens: list,
-                 tick_mode: str, publisher: RedisPublisher, reconnect_max_retries: int = 50,
-                 reconnect_max_delay: int = 60):
+                 tick_mode: str, publisher: RedisPublisher, token_to_symbol: dict,
+                 reconnect_max_retries: int = 50, reconnect_max_delay: int = 60):
         self.socket_id = socket_id
         self.tokens = tokens
         self.tick_mode = MODE_MAP.get(tick_mode, MODE_FULL)
         self.publisher = publisher
+        self.token_to_symbol = token_to_symbol
         self._tick_count = 0
         self._connected = False
 
@@ -78,6 +79,12 @@ class SocketConnection:
     def _on_ticks(self, ws, ticks: list) -> None:
         self._tick_count += len(ticks)
         try:
+            for tick in ticks:
+                token = tick.get("instrument_token")
+                info = self.token_to_symbol.get(token, {})
+                tick["tradingsymbol"] = info.get("tradingsymbol", f"TOKEN_{token}" if token else "UNKNOWN")
+                if "name" in info:
+                    tick["name"] = info["name"]
             self.publisher.publish_ticks(ticks)
         except Exception as e:
             logger.error("Socket %d publish error: %s", self.socket_id, e)
@@ -120,10 +127,12 @@ class SocketConnection:
 class MultiSocketConnector:
     """Manages multiple WebSocket connections for distributed tick subscriptions."""
 
-    def __init__(self, api_key: str, access_token: str, publisher: RedisPublisher, config: dict):
+    def __init__(self, api_key: str, access_token: str, publisher: RedisPublisher, config: dict,
+                 token_to_symbol: dict):
         self.api_key = api_key
         self.access_token = access_token
         self.publisher = publisher
+        self.token_to_symbol = token_to_symbol
         self.num_sockets = min(config.get("num_sockets", 3), 3)
         self.tick_mode = config.get("tick_mode", "full")
         self.reconnect_max_retries = config.get("reconnect_max_retries", 50)
@@ -144,6 +153,7 @@ class MultiSocketConnector:
                 tokens=bucket,
                 tick_mode=self.tick_mode,
                 publisher=self.publisher,
+                token_to_symbol=self.token_to_symbol,
                 reconnect_max_retries=self.reconnect_max_retries,
                 reconnect_max_delay=self.reconnect_max_delay,
             )

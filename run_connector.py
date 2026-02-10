@@ -86,6 +86,7 @@ def run_trading_session(symbol: str, config: dict) -> None:
 
         num_sockets = config.get("connector", {}).get("num_sockets", 3)
         token_buckets = inst_mgr.distribute_tokens(all_instruments, num_sockets)
+        token_to_symbol = inst_mgr.get_token_symbol_map()
 
         _publisher = RedisPublisher(config.get("redis", {}))
         _publisher.connect()
@@ -96,6 +97,7 @@ def run_trading_session(symbol: str, config: dict) -> None:
             access_token=auth.get_access_token(),
             publisher=_publisher,
             config=config.get("connector", {}),
+            token_to_symbol=token_to_symbol,
         )
         _connector.start(token_buckets)
         logger.info("Connector running. Ctrl+C to stop.")

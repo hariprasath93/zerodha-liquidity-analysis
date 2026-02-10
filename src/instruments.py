@@ -194,3 +194,7 @@ class InstrumentManager:
             instrument_token,
             {"tradingsymbol": f"UNKNOWN_{instrument_token}", "name": "UNKNOWN"},
         )
+
+    def get_token_symbol_map(self) -> dict:
+        """Return token -> {tradingsymbol, name, ...} for all subscribed instruments (for tick enrichment)."""
+        return dict(self._token_symbol_map)
