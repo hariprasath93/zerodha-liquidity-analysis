@@ -1,0 +1,12 @@
+# Zerodha Liquidity Analysis - Dependencies
+# Install: pip install -r requirements.txt
+
+kiteconnect>=5.0.1
+pyotp>=2.9.0
+requests>=2.31.0
+redis>=5.0.0
+pyyaml>=6.0.1
+schedule>=1.2.1
+pandas>=2.1.0
+pyarrow>=14.0.0
+pytz>=2024.1
