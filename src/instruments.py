@@ -46,6 +46,31 @@ class InstrumentManager:
         logger.info("Downloaded %d instruments", len(self._instruments_df))
         return self._instruments_df
 
+    def get_instruments_for_symbols(self, symbols: list[str]) -> list:
+        """
+        Get all instruments (derivatives + spot) for multiple symbols.
+        Aggregates CE/PE/FUT for current+next weekly and monthly expiries,
+        plus underlying spot for each symbol. Distributes across sockets
+        when used with distribute_tokens().
+        """
+        if self._instruments_df is None:
+            self.fetch_instruments()
+
+        all_instruments = []
+        for symbol in symbols:
+            derivatives = self.get_derivative_tokens(symbol)
+            all_instruments.extend(derivatives)
+            underlying = self.get_underlying_token(symbol)
+            if underlying:
+                all_instruments.append(underlying)
+
+        logger.info(
+            "Total instruments for %s: %d",
+            ", ".join(symbols),
+            len(all_instruments),
+        )
+        return all_instruments
+
     def get_derivative_tokens(self, symbol: str) -> list:
         """Filter instruments for the given symbol's derivatives (CE/PE/FUT, current+next week, current+next month)."""
         if self._instruments_df is None:

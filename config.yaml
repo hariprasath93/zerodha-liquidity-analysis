@@ -1,14 +1,14 @@
 # Zerodha Liquidity Analysis - Configuration
 
 zerodha:
-  api_key: "5itukcc9juvgh067"
-  api_secret: "21xhyft1fkid8kl6fhkzrg4khjz0spck"
-  user_id: "ZH1892"
-  password: "Harry@1894"
-  totp_secret: "RSEJWH64ZPL472PAVZJVR5SQICYNDR6H"       # Base32-encoded TOTP secret from Zerodha
+  api_key: ""       # Override via ZERODHA_API_KEY env var
+  api_secret: ""    # Override via ZERODHA_API_SECRET env var
+  user_id: ""       # Override via ZERODHA_USER_ID env var
+  password: ""      # Override via ZERODHA_PASSWORD env var
+  totp_secret: ""   # Override via ZERODHA_TOTP_SECRET env var
 
 redis:
-  host: "localhost"
+  host: "localhost"  # Override via REDIS_HOST env var (set to "redis" in Docker)
   port: 6379
   db: 0
   password: null
@@ -20,7 +20,7 @@ redis:
 connector:
   num_sockets: 3
   tick_mode: "full"
-  login_time: "08:45"
+  login_time: "08:50"
   reconnect_max_retries: 50
   reconnect_max_delay: 60
 
@@ -43,6 +43,11 @@ persistence:
   redis_key_ttl_seconds: 86400
   parquet_enabled: false
   parquet_dir: "./data/parquet"
+
+telegram:
+  bot_token: ""      # Override via TELEGRAM_BOT_TOKEN env var
+  chat_id: ""        # Override via TELEGRAM_CHAT_ID env var
+  enabled: true
 
 logging:
   level: "INFO"

@@ -10,3 +10,4 @@ schedule>=1.2.1
 pandas>=2.1.0
 pyarrow>=14.0.0
 pytz>=2024.1
+streamlit>=1.30.0

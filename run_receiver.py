@@ -41,7 +41,12 @@ def setup_logging(config: dict, log_level_override: Optional[str] = None) -> Non
 
 def load_config(path: str) -> dict:
     with open(path, "r") as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+    # Override Redis host from environment variable
+    redis_host = os.environ.get("REDIS_HOST")
+    if redis_host:
+        config.setdefault("redis", {})["host"] = redis_host
+    return config
 
 
 def signal_handler(signum, frame):
