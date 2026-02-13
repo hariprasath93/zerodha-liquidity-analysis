@@ -13,7 +13,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-    restart: unless-stopped
+    restart: on-failure:3
 
   receiver:
     build: .
@@ -27,7 +27,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-    restart: unless-stopped
+    restart: on-failure:3
 
   dashboard:
     build: .
@@ -37,4 +37,4 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - ./data:/app/data
-    restart: unless-stopped
+    restart: on-failure:3

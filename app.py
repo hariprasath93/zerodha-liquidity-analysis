@@ -101,7 +101,7 @@ def load_futures_spread(symbol: str, trade_date: str) -> pd.DataFrame:
     conn.close()
     if df.empty:
         return df
-    df["exchange_timestamp"] = pd.to_datetime(df["exchange_timestamp"])
+    df["exchange_timestamp"] = pd.to_datetime(df["exchange_timestamp"], format="ISO8601")
     df["spread_pts"] = df["best_ask"] - df["best_bid"]
     mid = (df["best_ask"] + df["best_bid"]) / 2
     df["spread_bps"] = (df["spread_pts"] / mid) * 10000
