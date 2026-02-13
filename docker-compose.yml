@@ -1,52 +1,40 @@
 services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    restart: on-failure
-
   connector:
     build: .
     command: python run_connector.py --symbol NIFTY,BANKNIFTY,FINNIFTY --login-now
-    depends_on:
-      - redis
+    network_mode: host
     env_file:
       - .env
     environment:
-      - REDIS_HOST=redis
+      - TZ=Asia/Kolkata
+      - REDIS_HOST=127.0.0.1
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-    restart: on-failure
+    restart: unless-stopped
 
   receiver:
     build: .
     command: python run_receiver.py
-    depends_on:
-      - redis
+    network_mode: host
     env_file:
       - .env
     environment:
-      - REDIS_HOST=redis
+      - TZ=Asia/Kolkata
+      - REDIS_HOST=127.0.0.1
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-    restart: on-failure
+    restart: unless-stopped
 
   dashboard:
     build: .
     command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
-    depends_on:
-      - redis
-    ports:
-      - "8501:8501"
+    network_mode: host
+    environment:
+      - TZ=Asia/Kolkata
     volumes:
       - ./data:/app/data
-    restart: on-failure
-
-volumes:
-  redis-data:
+    restart: unless-stopped
