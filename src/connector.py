@@ -60,6 +60,7 @@ class SocketConnection:
         self.token_to_symbol = token_to_symbol
         self._tick_count = 0
         self._connected = False
+        self._last_tick_time: float = time.time()
 
         self.kws = KiteTicker(
             api_key=api_key,
@@ -78,6 +79,7 @@ class SocketConnection:
 
     def _on_ticks(self, ws, ticks: list) -> None:
         self._tick_count += len(ticks)
+        self._last_tick_time = time.time()
         try:
             for tick in ticks:
                 token = tick.get("instrument_token")
@@ -122,6 +124,10 @@ class SocketConnection:
     @property
     def tick_count(self) -> int:
         return self._tick_count
+
+    @property
+    def last_tick_time(self) -> float:
+        return self._last_tick_time
 
 
 class MultiSocketConnector:
@@ -169,6 +175,12 @@ class MultiSocketConnector:
         self.sockets.clear()
         logger.info("All WebSocket connections stopped")
 
+    def reconnect_all(self, token_buckets: list) -> None:
+        logger.warning("Watchdog triggered — forcing reconnect of all sockets")
+        self.stop()
+        time.sleep(2)
+        self.start(token_buckets)
+
     @property
     def total_tick_count(self) -> int:
         return sum(s.tick_count for s in self.sockets)
@@ -176,3 +188,9 @@ class MultiSocketConnector:
     @property
     def all_connected(self) -> bool:
         return all(s.is_connected for s in self.sockets)
+
+    @property
+    def last_tick_time(self) -> float:
+        if not self.sockets:
+            return time.time()
+        return max(s.last_tick_time for s in self.sockets)

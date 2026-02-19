@@ -126,6 +126,7 @@ def run_trading_session(symbols: list[str], config: dict) -> None:
         market_open_sent = False
         last_hourly_hour = None
         session_start = datetime.now(IST)
+        WATCHDOG_TIMEOUT = 60  # seconds with no ticks before forcing reconnect
 
         while True:
             time.sleep(10)
@@ -142,6 +143,14 @@ def run_trading_session(symbols: list[str], config: dict) -> None:
                 elapsed = now.hour - session_start.hour
                 notifier.send_hourly_stats(_connector.total_tick_count, elapsed)
                 last_hourly_hour = now.hour
+
+            # Watchdog: force reconnect if no ticks during market hours
+            is_market_hours = (9, 15) <= (now.hour, now.minute) <= (15, 30)
+            stale_secs = time.time() - _connector.last_tick_time
+            if is_market_hours and stale_secs > WATCHDOG_TIMEOUT:
+                logger.warning("No ticks for %.0fs — forcing reconnect", stale_secs)
+                notifier.send_error(f"Feed stall detected ({stale_secs:.0f}s), reconnecting...")
+                _connector.reconnect_all(token_buckets)
 
             # Shutdown after 15:45
             if now.hour >= 15 and now.minute >= 45:
